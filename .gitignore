@@ -1,0 +1,17 @@
+# Machine-local state — never commit these
+# They contain absolute paths specific to each machine
+config.json
+installed.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
