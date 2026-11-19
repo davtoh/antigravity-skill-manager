@@ -252,8 +252,7 @@ def search_skills(query, config):
     return [item[1] for item in results]
 
 
-def estimate_tokens(text):
-    return max(1, len(text) // 4)
+from skill_overhead import estimate_tokens, print_overhead_breakdown
 
 
 # ---------------------------------------------------------------------------
@@ -312,21 +311,21 @@ def cmd_list_installed(args, config):
                 name = fm["name"] if fm else child.name
                 desc = fm["description"] if fm else ""
                 tokens = estimate_tokens(name + desc)
+                body_tokens = max(1, (fm["full_content_len"] if fm else skill_md.stat().st_size) // 4)
                 total_tokens += tokens
-                installed.append((name, desc, tokens, child))
+                installed.append((name, desc, tokens, body_tokens, child))
 
     if not installed:
         print("  No global skills installed.\n")
         return
 
-    for name, desc, tokens, path in sorted(installed, key=lambda x: x[0]):
-        print(f"  * {name:<24} (~{tokens} prompt tokens)")
+    for name, desc, tokens, body_tokens, path in sorted(installed, key=lambda x: x[0]):
+        print(f"  * {name:<24} (~{tokens} prompt tok | ~{body_tokens} body tok on load)")
         if desc:
             print(f"    {desc[:110]}...")
         print(f"    Location: {path}")
 
-    print(f"\n[i] Total estimated system prompt overhead: ~{total_tokens} tokens across {len(installed)} installed skill(s).")
-    print(f"    Tip: Uninstall unneeded skills using 'skill-manager uninstall <skill-name>' to keep context minimal.\n")
+    print_overhead_breakdown(target_dir, total_tokens, len(installed), parse_skill_frontmatter)
 
 
 def resolve_skill_source(identifier, config):
